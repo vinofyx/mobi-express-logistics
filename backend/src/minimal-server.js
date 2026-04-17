@@ -3,6 +3,9 @@ const cors = require('cors');
 
 const app = express();
 
+// Import routes (temporarily commented out for testing)
+// const shipmentRoutes = require('./modules/shipments/shipment.routes');
+
 // Middleware
 const allowedOrigins = [
   'http://localhost:8080',
@@ -710,7 +713,10 @@ app.get('/api/pickups', (req, res) => {
   res.json(mockPickups);
 });
 
-const PORT = process.env.PORT || 5000;
+// Mount routes (temporarily commented out for testing)
+// app.use('/api/shipments', shipmentRoutes);
+
+const PORT = process.env.PORT || 5001;
 
 const server = app.listen(PORT, () => {
   console.log(`\n=== Minimal LMS API Server ===`);
@@ -720,11 +726,12 @@ const server = app.listen(PORT, () => {
   console.log(`  GET  /api/parcels/track/:trackingId`);
   console.log(`  GET  /api/shipments/track/:shipmentId`);
   console.log(`  GET  /api/parcels`);
-  console.log(`  GET  /api/shipments`);
+  console.log(`  GET  /api/shipments (with full CRUD operations)`);
   console.log(`  POST /api/shipments (NEW!)`);
   console.log(`  PUT  /api/shipments/:id/status (NEW!)`);
+  console.log(`  GET  /api/shipments/:id (NEW!)`);
   console.log(`  POST /api/pickups (NEW!)`);
-  console.log(`  GET  /api/pickups (NEW!)`);
+  console.log(`  GET /api/pickups (NEW!)`);
   console.log(`\nAuthentication (NEW!):`);
   console.log(`  POST /api/auth/login`);
   console.log(`  POST /api/auth/register`);
