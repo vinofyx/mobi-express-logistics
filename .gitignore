@@ -74,9 +74,12 @@ public
 .out
 .storybook-out
 
-# Temporary folders
-tmp/
-temp/
+# TanStack Router
+routeTree.gen.ts
+
+# Test files
+test-connectivity.js
+test-api.tsx
 
 # Editor directories and files
 .vscode/
@@ -93,13 +96,3 @@ temp/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Cloudflare
-wrangler.toml
-
-# TanStack Router
-routeTree.gen.ts
-
-# Test files
-test-connectivity.js
-test-api.tsx
