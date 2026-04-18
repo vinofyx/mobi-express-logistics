@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 
 export type AppRole = "admin" | "customer" | "agent" | "center_operator";
 
-interface User {
+export type User = {
   _id: string;
   name: string;
   email: string;
@@ -11,7 +11,7 @@ interface User {
   address: string;
   isActive: boolean;
   createdAt?: string;
-}
+};
 
 interface AuthContextValue {
   user: User | null;
@@ -75,13 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Check if user has specific role
-  const hasRole = (role: AppRole) => {
-    return user && user.role === role;
+  const hasRole = (role: AppRole): boolean => {
+    return user ? user.role === role : false;
   };
 
   // Check if user has any of the specified roles
-  const hasAnyRole = (roles: AppRole[]) => {
-    return user && roles.includes(user.role as AppRole);
+  const hasAnyRole = (roles: AppRole[]): boolean => {
+    return user ? roles.includes(user.role as AppRole) : false;
   };
 
   // Get user roles
@@ -113,6 +113,7 @@ export function useAuth() {
 }
 
 export function useHasRole(role: AppRole) {
-  const { roles } = useAuth();
+  const { getRoles } = useAuth();
+  const roles = getRoles();
   return roles.includes(role);
 }
