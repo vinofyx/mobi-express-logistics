@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import SignupPage from "@/pages/SignupPage";
+import Signup from "@/pages/Signup";
 
 export const Route = createFileRoute("/signup")({
-  component: SignupPage,
+  component: Signup,
   head: () => ({
     meta: [
       { title: "Create account - Mobi Express" },

@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { authService } from "../lib/authService";
 
-const Login = () => {
+const Signup = () => {
   const [form, setForm] = useState({
+    name: "",
     email: "",
-    password: ""
+    password: "",
+    phone: "",
+    address: "",
+    role: "customer"
   });
 
   const handleChange = (e) => {
@@ -18,11 +22,11 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await authService.login(form);
-      alert("Login successful");
+      const res = await authService.signup(form);
+      alert("Signup successful");
       console.log(res);
     } catch (err) {
-      alert("Login failed");
+      alert("Signup failed");
       console.error(err);
     }
   };
@@ -30,9 +34,18 @@ const Login = () => {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2>Login</h2>
+        <h2>Sign Up</h2>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <input
+            type="text"
+            name="name"
+            placeholder="Enter full name"
+            value={form.name}
+            onChange={handleChange}
+            style={styles.input}
+          />
+
           <input
             type="email"
             name="email"
@@ -51,8 +64,37 @@ const Login = () => {
             style={styles.input}
           />
 
+          <input
+            type="tel"
+            name="phone"
+            placeholder="Enter phone number"
+            value={form.phone}
+            onChange={handleChange}
+            style={styles.input}
+          />
+
+          <input
+            type="text"
+            name="address"
+            placeholder="Enter address"
+            value={form.address}
+            onChange={handleChange}
+            style={styles.input}
+          />
+
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            style={styles.input}
+          >
+            <option value="customer">Customer</option>
+            <option value="agent">Agent</option>
+            <option value="admin">Admin</option>
+          </select>
+
           <button type="submit" style={styles.button}>
-            Login
+            Create Account
           </button>
         </form>
       </div>
@@ -72,7 +114,7 @@ const styles = {
     padding: "30px",
     background: "#fff",
     borderRadius: "10px",
-    width: "300px",
+    width: "350px",
     boxShadow: "0 0 10px rgba(0,0,0,0.1)"
   },
   form: {
@@ -87,7 +129,7 @@ const styles = {
   },
   button: {
     padding: "10px",
-    background: "#007bff",
+    background: "#28a745",
     color: "#fff",
     border: "none",
     borderRadius: "5px",
@@ -95,4 +137,4 @@ const styles = {
   }
 };
 
-export default Login;
+export default Signup;
