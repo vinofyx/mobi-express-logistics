@@ -9,10 +9,10 @@ const connectDB      = require("./config/db");
 // const pickupRoutes   = require("./routes/pickupRoutes");
 
 // ✅ NEW: Parcel routes (IMPORTANT)
-const parcelRoutes   = require("./modules/parcels/parcel.routes");
+// const parcelRoutes   = require("./modules/parcels/parcel.routes");
 
 // ✅ NEW: Shipment routes
-const shipmentRoutes = require("./modules/shipments/shipment.routes");
+// const shipmentRoutes = require("./modules/shipments/shipment.routes");
 
 // NEW: Auth routes
 const authRoutes = require("./routes/authRoutes");
@@ -39,10 +39,10 @@ app.use(express.urlencoded({ extended: false }));
 // app.use("/api/pickups",   pickupRoutes);
 
 // ✅ IMPORTANT: Add parcel route here
-app.use("/api/parcels", parcelRoutes);
+// app.use("/api/parcels", parcelRoutes);
 
 // ✅ Add shipment routes
-app.use("/api/shipments", shipmentRoutes);
+// app.use("/api/shipments", shipmentRoutes);
 
 // Add auth routes
 app.use("/api/auth", authRoutes);

@@ -354,8 +354,67 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
+app.post('/api/auth/signup', (req, res) => {
+  const { name, email, password, phone, address, role } = req.body;
+  
+  // Basic validation
+  if (!name || !email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: 'Name, email and password are required',
+      data: null
+    });
+  }
+  
+  // Email validation
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please enter a valid email address',
+      data: null
+    });
+  }
+  
+  // Phone validation
+  if (!/^[6-9]\d{9}$/.test(phone)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please enter a valid 10-digit mobile number',
+      data: null
+    });
+  }
+  
+  // Generate mock user
+  const newUser = {
+    _id: `64f8a1b2c3d4e5f6a7b8c9d${Math.random().toString(36).substr(2, 3)}`,
+    name,
+    email,
+    role: role || 'customer',
+    phone,
+    address,
+    isActive: true,
+    createdAt: new Date().toISOString()
+  };
+  
+  // Generate mock tokens
+  const token = `mock-jwt-token-${newUser._id}-${Date.now()}`;
+  const refreshToken = `mock-refresh-token-${newUser._id}-${Date.now()}`;
+  
+  console.log(`New user registered: ${newUser.email} (${newUser.role})`);
+  
+  return res.status(201).json({
+    success: true,
+    message: 'User registered successfully',
+    data: {
+      user: newUser,
+      token,
+      refreshToken
+    }
+  });
+});
+
 app.post('/api/auth/register', (req, res) => {
-  const { name, email, password, role, phone, address } = req.body;
+  const { name, email, password, phone, address, role } = req.body;
   
   // Basic validation
   if (!name || !email || !password || !phone || !address) {
@@ -607,7 +666,7 @@ app.get('/api/pickups', (req, res) => {
 // Mount routes
 app.use('/api/shipments', shipmentRoutes);
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log(`\n=== Minimal LMS API Server ===`);

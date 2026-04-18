@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5001/api"
+  baseURL: "http://localhost:5000/api"
 });
 
 API.interceptors.response.use(
@@ -17,7 +17,7 @@ export const authService = {
     return response.data;
   },
   signup: async (data) => {
-    const response = await API.post("/auth/signup", data);
+    const response = await API.post("/auth/register", data);
     return response.data;
   }
 };
