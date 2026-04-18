@@ -87,6 +87,99 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+// Mock data for dashboard
+const mockPickups = [
+  {
+    _id: '1',
+    pickupId: 'PU001',
+    name: 'John Doe',
+    phone: '9876543210',
+    address: '123 Main St',
+    pickupDate: '2026-04-18',
+    pickupTime: '10:00',
+    status: 'Pending',
+    createdAt: new Date().toISOString()
+  },
+  {
+    _id: '2',
+    pickupId: 'PU002',
+    name: 'Jane Smith',
+    phone: '9876543211',
+    address: '456 Oak Ave',
+    pickupDate: '2026-04-18',
+    pickupTime: '14:00',
+    status: 'Confirmed',
+    createdAt: new Date().toISOString()
+  }
+];
+
+const mockParcels = [
+  {
+    _id: '1',
+    trackingId: 'TRK001',
+    status: 'In Transit',
+    origin: 'New York',
+    destination: 'Los Angeles',
+    weight: '2.5kg',
+    createdAt: new Date().toISOString()
+  },
+  {
+    _id: '2',
+    trackingId: 'TRK002',
+    status: 'Delivered',
+    origin: 'Chicago',
+    destination: 'Houston',
+    weight: '1.8kg',
+    createdAt: new Date().toISOString()
+  }
+];
+
+const mockShipments = [
+  {
+    _id: '1',
+    shipmentId: 'SHP001',
+    status: 'Created',
+    originHub: 'NYC Hub',
+    destinationHub: 'LA Hub',
+    parcels: ['TRK001'],
+    createdAt: new Date().toISOString()
+  },
+  {
+    _id: '2',
+    shipmentId: 'SHP002',
+    status: 'In Transit',
+    originHub: 'Chicago Hub',
+    destinationHub: 'Houston Hub',
+    parcels: ['TRK002'],
+    createdAt: new Date().toISOString()
+  }
+];
+
+// API endpoints for dashboard data
+app.get('/api/pickups', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Pickups retrieved successfully',
+    data: mockPickups
+  });
+});
+
+app.get('/api/parcels', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Parcels retrieved successfully',
+    data: mockParcels
+  });
+});
+
+app.get('/api/shipments', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Shipments retrieved successfully',
+    data: mockShipments
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ success: true, message: "API is running." });
@@ -100,6 +193,9 @@ const server = app.listen(PORT, () => {
   console.log(`\nAvailable endpoints:`);
   console.log(`  POST /api/auth/login`);
   console.log(`  POST /api/auth/register`);
+  console.log(`  GET  /api/pickups`);
+  console.log(`  GET  /api/parcels`);
+  console.log(`  GET  /api/shipments`);
   console.log(`  GET  /health`);
 });
 

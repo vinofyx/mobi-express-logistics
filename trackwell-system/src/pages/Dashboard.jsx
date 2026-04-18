@@ -43,10 +43,12 @@ const Dashboard = () => {
         shipmentsAPI.getAll()
       ]);
 
-      // Extract data from responses
-      const pickupsData = pickupsResponse.data?.data || [];
-      const parcelsData = parcelsResponse.data?.data || [];
-      const shipmentsData = shipmentsResponse.data?.data || [];
+      // Extract data from responses with better error handling
+      const pickupsData = Array.isArray(pickupsResponse.data?.data) ? pickupsResponse.data.data : [];
+      const parcelsData = Array.isArray(parcelsResponse.data?.data) ? parcelsResponse.data.data : [];
+      const shipmentsData = Array.isArray(shipmentsResponse.data?.data) ? shipmentsResponse.data.data : [];
+
+      console.log('Dashboard data fetched:', { pickupsData, parcelsData, shipmentsData });
 
       setPickups(pickupsData);
       setParcels(parcelsData);
@@ -55,6 +57,10 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Dashboard data fetch error:', err);
       setError('Failed to load dashboard data. Please try again.');
+      // Set empty arrays on error to prevent map errors
+      setPickups([]);
+      setParcels([]);
+      setShipments([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -72,14 +78,14 @@ const Dashboard = () => {
     await fetchDashboardData();
   };
 
-  // Calculate summary statistics
+  // Calculate summary statistics with safe array operations
   const stats = {
-    totalPickups: pickups.length,
-    totalParcels: parcels.length,
-    totalShipments: shipments.length,
-    pendingPickups: pickups.filter(p => p.status === 'Pending').length,
-    inTransitParcels: parcels.filter(p => p.status === 'In Transit').length,
-    activeShipments: shipments.filter(s => ['Created', 'Dispatched', 'In Transit'].includes(s.status)).length
+    totalPickups: (pickups || []).length,
+    totalParcels: (parcels || []).length,
+    totalShipments: (shipments || []).length,
+    pendingPickups: (pickups || []).filter(p => p?.status === 'Pending').length,
+    inTransitParcels: (parcels || []).filter(p => p?.status === 'In Transit').length,
+    activeShipments: (shipments || []).filter(s => s?.status && ['Created', 'Dispatched', 'In Transit'].includes(s.status)).length
   };
 
   // Status badge component
@@ -240,14 +246,14 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {pickups.length === 0 ? (
+              {(!pickups || pickups.length === 0) ? (
                 <div className="text-center py-8 text-gray-500">
                   <MapPin className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                   <p>No pickups found</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {pickups.slice(0, 5).map((pickup) => (
+                  {(pickups || []).slice(0, 5).map((pickup) => (
                     <div key={pickup._id || pickup.pickupId} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
@@ -296,14 +302,14 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {shipments.length === 0 ? (
+              {(!shipments || shipments.length === 0) ? (
                 <div className="text-center py-8 text-gray-500">
                   <Truck className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                   <p>No shipments found</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {shipments.slice(0, 5).map((shipment) => (
+                  {(shipments || []).slice(0, 5).map((shipment) => (
                     <div key={shipment._id || shipment.shipmentId} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
@@ -374,7 +380,7 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm text-gray-600">Delivered</p>
                 <p className="text-lg font-semibold">
-                  {parcels.filter(p => p.status === 'Delivered').length}
+                  {(parcels || []).filter(p => p?.status === 'Delivered').length}
                 </p>
               </div>
             </div>
