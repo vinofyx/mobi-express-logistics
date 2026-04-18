@@ -24,7 +24,7 @@ const LoginEnhanced = () => {
     // Debug logging
     console.log("=== LOGIN ATTEMPT ===");
     console.log("Form data:", form);
-    console.log("API endpoint: http://localhost:5001/api/auth/login");
+    console.log("API endpoint: http://localhost:5000/api/auth/login");
 
     try {
       const res = await authService.login(form);
@@ -101,7 +101,7 @@ const LoginEnhanced = () => {
         <div style={styles.debugInfo}>
           <h4>Debug Info:</h4>
           <p>Frontend: http://localhost:8080</p>
-          <p>Backend: http://localhost:5001</p>
+          <p>Backend: http://localhost:5000</p>
           <p>Check browser console for detailed logs</p>
         </div>
       </div>

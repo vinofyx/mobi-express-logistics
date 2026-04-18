@@ -28,7 +28,7 @@ const SignupEnhanced = () => {
     // Debug logging
     console.log("=== SIGNUP ATTEMPT ===");
     console.log("Form data:", form);
-    console.log("API endpoint: http://localhost:5001/api/auth/signup");
+    console.log("API endpoint: http://localhost:5000/api/auth/register");
 
     try {
       const res = await authService.signup(form);
@@ -149,7 +149,7 @@ const SignupEnhanced = () => {
         <div style={styles.debugInfo}>
           <h4>Debug Info:</h4>
           <p>Frontend: http://localhost:8080</p>
-          <p>Backend: http://localhost:5001</p>
+          <p>Backend: http://localhost:5000</p>
           <p>Check browser console for detailed logs</p>
         </div>
       </div>
