@@ -22,8 +22,9 @@ function pickHome(roles: AppRole[]): string {
 }
 
 function DashboardGate() {
-  const { user, loading, roles } = useAuth();
+  const { user, loading, getRoles } = useAuth();
   const navigate = useNavigate();
+  const roles = getRoles();
 
   useEffect(() => {
     if (loading) return;
@@ -39,8 +40,8 @@ function DashboardGate() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading…</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
       </div>
     );
   }

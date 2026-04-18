@@ -1,69 +1,106 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 
 export type AppRole = "admin" | "customer" | "agent" | "center_operator";
 
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  phone: string;
+  address: string;
+  isActive: boolean;
+  createdAt?: string;
+}
+
 interface AuthContextValue {
   user: User | null;
-  session: Session | null;
-  roles: AppRole[];
+  token: string | null;
   loading: boolean;
-  signOut: () => Promise<void>;
-  refreshRoles: () => Promise<void>;
+  login: (userData: User, authToken: string, refreshToken: string) => void;
+  logout: () => void;
+  isAuthenticated: boolean;
+  hasRole: (role: AppRole) => boolean;
+  hasAnyRole: (roles: AppRole[]) => boolean;
+  getRoles: () => AppRole[];
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [roles, setRoles] = useState<AppRole[]>([]);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchRoles = async (userId: string) => {
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-    setRoles((data?.map((r) => r.role as AppRole)) ?? []);
-  };
-
+  // Load user from localStorage on initial load
   useEffect(() => {
-    // Set up listener FIRST
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        // Defer to avoid deadlock
-        setTimeout(() => fetchRoles(newSession.user.id), 0);
-      } else {
-        setRoles([]);
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedToken && storedUser) {
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        // Clear invalid data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('refreshToken');
       }
-    });
-
-    // THEN check existing session
-    supabase.auth.getSession().then(({ data: { session: existing } }) => {
-      setSession(existing);
-      setUser(existing?.user ?? null);
-      if (existing?.user) {
-        fetchRoles(existing.user.id).finally(() => setLoading(false));
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => sub.subscription.unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setRoles([]);
+  // Login function
+  const login = (userData: User, authToken: string, refreshToken: string) => {
+    setUser(userData);
+    setToken(authToken);
+    
+    // Store in localStorage
+    localStorage.setItem('token', authToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('refreshToken', refreshToken);
   };
 
-  const refreshRoles = async () => {
-    if (user) await fetchRoles(user.id);
+  // Logout function
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    
+    // Clear localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('refreshToken');
+  };
+
+  // Check if user has specific role
+  const hasRole = (role: AppRole) => {
+    return user && user.role === role;
+  };
+
+  // Check if user has any of the specified roles
+  const hasAnyRole = (roles: AppRole[]) => {
+    return user && roles.includes(user.role as AppRole);
+  };
+
+  // Get user roles
+  const getRoles = () => {
+    return user ? [user.role as AppRole] : [];
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, roles, loading, signOut, refreshRoles }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      loading, 
+      login, 
+      logout, 
+      isAuthenticated: !!token,
+      hasRole,
+      hasAnyRole,
+      getRoles
+    }}>
       {children}
     </AuthContext.Provider>
   );

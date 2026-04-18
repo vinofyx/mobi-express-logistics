@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Logo } from '@/components/Logo';
-import { Eye, EyeOff, LogIn, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { authService } from '@/lib/authService';
+import { useAuth } from '@/lib/auth-context';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -76,10 +79,8 @@ const LoginPage = () => {
       const response = await authService.login(formData);
       
       if (response.success) {
-        // Store tokens in localStorage
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        // Use auth context login function
+        login(response.data.user, response.data.token, response.data.refreshToken);
         
         // Redirect to dashboard
         navigate('/dashboard');
