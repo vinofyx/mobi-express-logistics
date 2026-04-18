@@ -73,26 +73,18 @@ const LoginPage = () => {
     setApiError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await authService.login(formData);
       
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
+      if (response.success) {
         // Store tokens in localStorage
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('refreshToken', data.data.refreshToken);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         
         // Redirect to dashboard
         navigate('/dashboard');
       } else {
-        setApiError(data.message || 'Login failed');
+        setApiError(response.message || 'Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);

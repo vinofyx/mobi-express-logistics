@@ -96,7 +96,7 @@ const SignupPage = () => {
     setApiError('');
     
     try {
-      const response = await authService.register(formData);
+      const response = await authService.signup(formData);
       
       if (response.success) {
         // Store tokens in localStorage
