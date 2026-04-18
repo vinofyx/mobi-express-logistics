@@ -3,8 +3,8 @@ const cors = require('cors');
 
 const app = express();
 
-// Import routes (temporarily commented out for testing)
-// const shipmentRoutes = require('./modules/shipments/shipment.routes');
+// Import routes
+const shipmentRoutes = require('./modules/shipments/shipment.routes');
 
 // Middleware
 const allowedOrigins = [
@@ -262,118 +262,9 @@ app.get('/api/shipments', (req, res) => {
   res.json(mockShipments);
 });
 
-// Mock shipment creation endpoint
-app.post('/api/shipments', (req, res) => {
-  const { originHub, destinationHub, expectedArrival, parcelIds } = req.body;
-  
-  // Basic validation
-  if (!originHub || !destinationHub || !expectedArrival || !parcelIds || parcelIds.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: 'Origin hub, destination hub, expected arrival, and at least one parcel are required',
-      data: null
-    });
-  }
-  
-  if (originHub === destinationHub) {
-    return res.status(400).json({
-      success: false,
-      message: 'Origin and destination hubs must be different',
-      data: null
-    });
-  }
-  
-  // Generate mock shipment ID
-  const shipmentId = `SHP-${originHub}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-  
-  // Get selected parcels details
-  const selectedParcels = parcelIds.map(id => ({
-    trackingId: `LMS-${originHub}-20260417-${id.toUpperCase()}`,
-    status: 'In Transit'
-  }));
-  
-  const mockShipment = {
-    success: true,
-    message: 'Shipment created successfully',
-    data: {
-      _id: `64f8a1b2c3d4e5f6a7b8c9d${Math.random().toString(36).substr(2, 3)}`,
-      shipmentId: shipmentId,
-      status: 'Created',
-      originHub: originHub,
-      destinationHub: destinationHub,
-      parcels: selectedParcels,
-      expectedArrival: expectedArrival,
-      statusHistory: [
-        {
-          status: 'Created',
-          location: originHub,
-          note: 'Shipment created and parcels assigned',
-          timestamp: new Date().toISOString()
-        }
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-  };
-  
-  console.log(`New shipment created: ${shipmentId} from ${originHub} to ${destinationHub} with ${parcelIds.length} parcels`);
-  res.status(201).json(mockShipment);
-});
+// Mock shipment creation endpoint removed - now handled by routes
 
-// Mock shipment status update endpoint
-app.put('/api/shipments/:id/status', (req, res) => {
-  const { id } = req.params;
-  const { status, note, location } = req.body;
-  
-  // Basic validation
-  if (!status) {
-    return res.status(400).json({
-      success: false,
-      message: 'Status is required',
-      data: null
-    });
-  }
-  
-  // Valid status transitions
-  const validTransitions = {
-    'Created': ['Dispatched'],
-    'Dispatched': ['In Transit'],
-    'In Transit': ['Received'],
-    'Received': []
-  };
-  
-  // Mock validation - in real implementation, you'd check current status
-  const allowedStatuses = ['Created', 'Dispatched', 'In Transit', 'Received'];
-  if (!allowedStatuses.includes(status)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid status',
-      data: null
-    });
-  }
-  
-  const mockShipment = {
-    success: true,
-    message: 'Shipment status updated successfully',
-    data: {
-      _id: id,
-      shipmentId: `SHP-HYD-20260417-ABC1`,
-      status: status,
-      statusHistory: [
-        {
-          status: status,
-          location: location || 'Unknown',
-          note: note || `Status updated to ${status}`,
-          timestamp: new Date().toISOString()
-        }
-      ],
-      updatedAt: new Date().toISOString()
-    }
-  };
-  
-  console.log(`Shipment ${id} status updated to: ${status}`);
-  res.json(mockShipment);
-});
+// Mock shipment status update endpoint removed - now handled by routes
 
 // Authentication endpoints
 app.post('/api/auth/login', (req, res) => {
@@ -713,8 +604,8 @@ app.get('/api/pickups', (req, res) => {
   res.json(mockPickups);
 });
 
-// Mount routes (temporarily commented out for testing)
-// app.use('/api/shipments', shipmentRoutes);
+// Mount routes
+app.use('/api/shipments', shipmentRoutes);
 
 const PORT = process.env.PORT || 5001;
 

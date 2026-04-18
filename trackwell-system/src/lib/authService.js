@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance for auth requests
 const authApi = axios.create({
-  baseURL: 'http://localhost:5000/api/auth',
+  baseURL: 'http://localhost:5001/api/auth',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
