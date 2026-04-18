@@ -49,3 +49,4 @@ router.patch(
 router.delete('/:id', /* authorize('admin'), */ controller.remove); // Temporarily disabled
 
 module.exports = router;
+
