@@ -43,10 +43,16 @@ const Dashboard = () => {
         shipmentsAPI.getAll()
       ]);
 
-      // Extract data from responses with comprehensive error handling
-      const pickupsData = Array.isArray(pickupsResponse?.data) ? pickupsResponse.data : [];
-      const parcelsData = Array.isArray(parcelsResponse?.data) ? parcelsResponse.data : [];
-      const shipmentsData = Array.isArray(shipmentsResponse?.data) ? shipmentsResponse.data : [];
+      // STEP 1: FIX API RESPONSE HANDLING
+      // Add debug logging to see actual structure
+      console.log("PICKUPS API RESPONSE:", pickupsResponse.data);
+      console.log("PARCELS API RESPONSE:", parcelsResponse.data);
+      console.log("SHIPMENTS API RESPONSE:", shipmentsResponse.data);
+      
+      // Extract data from responses with correct structure (based on test results)
+      const pickupsData = pickupsResponse?.data || [];
+      const parcelsData = parcelsResponse?.data || [];
+      const shipmentsData = shipmentsResponse?.data || [];
       
       // Additional validation - ensure each item has required properties
       const validatedPickups = (pickupsData || []).map(p => ({
