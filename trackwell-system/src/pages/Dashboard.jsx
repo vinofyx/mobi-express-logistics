@@ -44,12 +44,12 @@ const Dashboard = () => {
       ]);
 
       // Extract data from responses with comprehensive error handling
-      const pickupsData = Array.isArray(pickupsResponse?.data?.data) ? pickupsResponse.data.data : [];
-      const parcelsData = Array.isArray(parcelsResponse?.data?.data) ? parcelsResponse.data.data : [];
-      const shipmentsData = Array.isArray(shipmentsResponse?.data?.data) ? shipmentsResponse.data.data : [];
+      const pickupsData = Array.isArray(pickupsResponse?.data) ? pickupsResponse.data : [];
+      const parcelsData = Array.isArray(parcelsResponse?.data) ? parcelsResponse.data : [];
+      const shipmentsData = Array.isArray(shipmentsResponse?.data) ? shipmentsResponse.data : [];
       
       // Additional validation - ensure each item has required properties
-      const validatedPickups = pickupsData.map(p => ({
+      const validatedPickups = (pickupsData || []).map(p => ({
         _id: p?._id || p?.pickupId || `pickup-${Math.random()}`,
         pickupId: p?.pickupId || 'N/A',
         name: p?.name || p?.customer?.name || 'Unknown',
@@ -60,7 +60,7 @@ const Dashboard = () => {
         status: p?.status || 'Unknown'
       }));
       
-      const validatedParcels = parcelsData.map(p => ({
+      const validatedParcels = (parcelsData || []).map(p => ({
         _id: p?._id || p?.trackingId || `parcel-${Math.random()}`,
         trackingId: p?.trackingId || 'N/A',
         status: p?.status || 'Unknown',
@@ -69,7 +69,7 @@ const Dashboard = () => {
         weight: p?.weight || 'N/A'
       }));
       
-      const validatedShipments = shipmentsData.map(s => ({
+      const validatedShipments = (shipmentsData || []).map(s => ({
         _id: s?._id || s?.shipmentId || `shipment-${Math.random()}`,
         shipmentId: s?.shipmentId || 'N/A',
         status: s?.status || 'Unknown',
