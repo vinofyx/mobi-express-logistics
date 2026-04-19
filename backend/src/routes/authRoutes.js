@@ -3,12 +3,12 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { authenticate } = require('../middleware/authenticate');
 const { authorize } = require('../middleware/authorize');
-const { validate } = require('../middleware/validate');
-const { loginSchema, registerSchema, changePasswordSchema, updateProfileSchema } = require('../validators/authValidator');
+// const { validate } = require('../middleware/validate');
+// const { loginSchema, registerSchema, changePasswordSchema, updateProfileSchema } = require('../validators/authValidator');
 
 // Public routes (no authentication required)
-router.post('/login', validate(loginSchema), authController.login);
-router.post('/register', validate(registerSchema), authController.register);
+router.post('/login', authController.login);
+router.post('/register', authController.register);
 router.post('/refresh-token', authController.refreshToken);
 
 // Protected routes (authentication required)
@@ -16,8 +16,8 @@ router.use(authenticate);
 
 // User profile routes
 router.get('/profile', authController.getProfile);
-router.put('/profile', validate(updateProfileSchema), authController.updateProfile);
-router.put('/change-password', validate(changePasswordSchema), authController.changePassword);
+// router.put('/profile', validate(updateProfileSchema), authController.updateProfile);
+// router.put('/change-password', validate(changePasswordSchema), authController.changePassword);
 router.post('/logout', authController.logout);
 
 // Admin only routes
