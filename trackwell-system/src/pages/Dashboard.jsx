@@ -43,16 +43,51 @@ const Dashboard = () => {
         shipmentsAPI.getAll()
       ]);
 
-      // Extract data from responses with better error handling
-      const pickupsData = Array.isArray(pickupsResponse.data?.data) ? pickupsResponse.data.data : [];
-      const parcelsData = Array.isArray(parcelsResponse.data?.data) ? parcelsResponse.data.data : [];
-      const shipmentsData = Array.isArray(shipmentsResponse.data?.data) ? shipmentsResponse.data.data : [];
+      // Extract data from responses with comprehensive error handling
+      const pickupsData = Array.isArray(pickupsResponse?.data?.data) ? pickupsResponse.data.data : [];
+      const parcelsData = Array.isArray(parcelsResponse?.data?.data) ? parcelsResponse.data.data : [];
+      const shipmentsData = Array.isArray(shipmentsResponse?.data?.data) ? shipmentsResponse.data.data : [];
+      
+      // Additional validation - ensure each item has required properties
+      const validatedPickups = pickupsData.map(p => ({
+        _id: p?._id || p?.pickupId || `pickup-${Math.random()}`,
+        pickupId: p?.pickupId || 'N/A',
+        name: p?.name || p?.customer?.name || 'Unknown',
+        phone: p?.phone || p?.customer?.phone || 'N/A',
+        address: p?.address || p?.customer?.address || 'N/A',
+        pickupDate: p?.pickupDate || 'N/A',
+        pickupTime: p?.pickupTime || 'N/A',
+        status: p?.status || 'Unknown'
+      }));
+      
+      const validatedParcels = parcelsData.map(p => ({
+        _id: p?._id || p?.trackingId || `parcel-${Math.random()}`,
+        trackingId: p?.trackingId || 'N/A',
+        status: p?.status || 'Unknown',
+        origin: p?.origin || 'N/A',
+        destination: p?.destination || 'N/A',
+        weight: p?.weight || 'N/A'
+      }));
+      
+      const validatedShipments = shipmentsData.map(s => ({
+        _id: s?._id || s?.shipmentId || `shipment-${Math.random()}`,
+        shipmentId: s?.shipmentId || 'N/A',
+        status: s?.status || 'Unknown',
+        originHub: s?.originHub || 'N/A',
+        destinationHub: s?.destinationHub || 'N/A',
+        parcels: Array.isArray(s?.parcels) ? s.parcels : [],
+        createdAt: s?.createdAt || new Date().toISOString()
+      }));
 
-      console.log('Dashboard data fetched:', { pickupsData, parcelsData, shipmentsData });
+      console.log('Dashboard data fetched:', { 
+        pickups: validatedPickups, 
+        parcels: validatedParcels, 
+        shipments: validatedShipments 
+      });
 
-      setPickups(pickupsData);
-      setParcels(parcelsData);
-      setShipments(shipmentsData);
+      setPickups(validatedPickups);
+      setParcels(validatedParcels);
+      setShipments(validatedShipments);
       
     } catch (err) {
       console.error('Dashboard data fetch error:', err);
@@ -140,8 +175,30 @@ const Dashboard = () => {
     );
   }
 
+  // Error boundary wrapper
+  const SafeRender = ({ children }) => {
+    try {
+      return children;
+    } catch (error) {
+      console.error('Dashboard render error:', error);
+      return (
+        <div className="min-h-screen bg-gray-50 p-6">
+          <div className="max-w-7xl mx-auto">
+            <Alert className="mb-6 border-red-200 bg-red-50">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Dashboard encountered an error. Please refresh the page.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      );
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <SafeRender>
+      <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -253,34 +310,34 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {(pickups || []).slice(0, 5).map((pickup) => (
-                    <div key={pickup._id || pickup.pickupId} className="border rounded-lg p-4">
+                  {(pickups || []).slice(0, 5).map((pickup, index) => (
+                    <div key={pickup?._id || pickup?.pickupId || `pickup-${index}`} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <User className="h-4 w-4 text-gray-500" />
-                            <span className="font-medium">{pickup.customer?.name || pickup.name}</span>
-                            <StatusBadge status={pickup.status} />
+                            <span className="font-medium">{pickup?.customer?.name || pickup?.name || 'Unknown'}</span>
+                            <StatusBadge status={pickup?.status || 'Unknown'} />
                           </div>
                           <div className="flex items-center gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Phone className="h-3 w-3" />
-                              {pickup.customer?.phone || pickup.phone}
+                              {pickup?.customer?.phone || pickup?.phone || 'N/A'}
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {pickup.pickupDate} {pickup.pickupTime}
+                              {pickup?.pickupDate || 'N/A'} {pickup?.pickupTime || 'N/A'}
                             </div>
                           </div>
                           <div className="text-sm text-gray-600 mt-1">
                             <MapPin className="h-3 w-3 inline mr-1" />
-                            {pickup.customer?.address || pickup.address}
+                            {pickup?.customer?.address || pickup?.address || 'N/A'}
                           </div>
                         </div>
                       </div>
                       {pickup.pickupId && (
                         <div className="text-xs text-gray-500 mt-2">
-                          ID: {pickup.pickupId}
+                          ID: {pickup?.pickupId || 'N/A'}
                         </div>
                       )}
                     </div>
@@ -309,22 +366,22 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {(shipments || []).slice(0, 5).map((shipment) => (
-                    <div key={shipment._id || shipment.shipmentId} className="border rounded-lg p-4">
+                  {(shipments || []).slice(0, 5).map((shipment, index) => (
+                    <div key={shipment?._id || shipment?.shipmentId || `shipment-${index}`} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-mono text-sm font-medium">
-                              {shipment.shipmentId}
+                              {shipment?.shipmentId || 'N/A'}
                             </span>
-                            <StatusBadge status={shipment.status} />
+                            <StatusBadge status={shipment?.status || 'Unknown'} />
                           </div>
                           <div className="flex items-center gap-4 text-sm text-gray-600">
                             <div>
-                              <span className="font-medium">From:</span> {shipment.originHub}
+                              <span className="font-medium">From:</span> {shipment?.originHub || 'N/A'}
                             </div>
                             <div>
-                              <span className="font-medium">To:</span> {shipment.destinationHub}
+                              <span className="font-medium">To:</span> {shipment?.destinationHub || 'N/A'}
                             </div>
                           </div>
                           {shipment.parcels && shipment.parcels.length > 0 && (
@@ -336,7 +393,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="text-xs text-gray-500">
-                        Created: {format(new Date(shipment.createdAt), 'PPp')}
+                        Created: {shipment?.createdAt ? format(new Date(shipment.createdAt), 'PPp') : 'N/A'}
                       </div>
                     </div>
                   ))}
@@ -400,6 +457,7 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+    </SafeRender>
   );
 };
 
