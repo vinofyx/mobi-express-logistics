@@ -49,10 +49,21 @@ const Dashboard = () => {
       console.log("PARCELS API RESPONSE:", parcelsResponse.data);
       console.log("SHIPMENTS API RESPONSE:", shipmentsResponse.data);
       
-      // Extract data from responses with correct structure (based on test results)
-      const pickupsData = pickupsResponse?.data || [];
-      const parcelsData = parcelsResponse?.data || [];
-      const shipmentsData = shipmentsResponse?.data || [];
+      // FINAL FIX: Handle both API response structures - direct data and nested data
+      const pickupsData = 
+        pickupsResponse?.data?.data ||
+        pickupsResponse?.data ||
+        [];
+      
+      const parcelsData = 
+        parcelsResponse?.data?.data ||
+        parcelsResponse?.data ||
+        [];
+      
+      const shipmentsData = 
+        shipmentsResponse?.data?.data ||
+        shipmentsResponse?.data ||
+        [];
       
       // Additional validation - ensure each item has required properties
       const validatedPickups = (pickupsData || []).map(p => ({
