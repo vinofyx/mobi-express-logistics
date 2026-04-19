@@ -49,24 +49,22 @@ const Dashboard = () => {
       console.log("PARCELS API RESPONSE:", parcelsResponse.data);
       console.log("SHIPMENTS API RESPONSE:", shipmentsResponse.data);
       
-      // FINAL FIX: Handle both API response structures - direct data and nested data
-      const pickupsData = 
-        pickupsResponse?.data?.data ||
-        pickupsResponse?.data ||
-        [];
+      // FINAL 100% FIX: Helper function to safely extract arrays
+      const getArray = (res) => {
+        if (Array.isArray(res?.data)) return res.data;
+        if (Array.isArray(res?.data?.data)) return res.data.data;
+        if (Array.isArray(res?.data?.pickups)) return res.data.pickups;
+        if (Array.isArray(res?.data?.parcels)) return res.data.parcels;
+        if (Array.isArray(res?.data?.shipments)) return res.data.shipments;
+        return [];
+      };
       
-      const parcelsData = 
-        parcelsResponse?.data?.data ||
-        parcelsResponse?.data ||
-        [];
+      const pickupsData = getArray(pickupsResponse);
+      const parcelsData = getArray(parcelsResponse);
+      const shipmentsData = getArray(shipmentsResponse);
       
-      const shipmentsData = 
-        shipmentsResponse?.data?.data ||
-        shipmentsResponse?.data ||
-        [];
-      
-      // Additional validation - ensure each item has required properties
-      const validatedPickups = (pickupsData || []).map(p => ({
+      // CRITICAL FIX: Add Array.isArray validation before all map operations
+      const validatedPickups = (Array.isArray(pickupsData) ? pickupsData : []).map(p => ({
         _id: p?._id || p?.pickupId || `pickup-${Math.random()}`,
         pickupId: p?.pickupId || 'N/A',
         name: p?.name || p?.customer?.name || 'Unknown',
@@ -77,7 +75,7 @@ const Dashboard = () => {
         status: p?.status || 'Unknown'
       }));
       
-      const validatedParcels = (parcelsData || []).map(p => ({
+      const validatedParcels = (Array.isArray(parcelsData) ? parcelsData : []).map(p => ({
         _id: p?._id || p?.trackingId || `parcel-${Math.random()}`,
         trackingId: p?.trackingId || 'N/A',
         status: p?.status || 'Unknown',
@@ -86,7 +84,7 @@ const Dashboard = () => {
         weight: p?.weight || 'N/A'
       }));
       
-      const validatedShipments = (shipmentsData || []).map(s => ({
+      const validatedShipments = (Array.isArray(shipmentsData) ? shipmentsData : []).map(s => ({
         _id: s?._id || s?.shipmentId || `shipment-${Math.random()}`,
         shipmentId: s?.shipmentId || 'N/A',
         status: s?.status || 'Unknown',
@@ -95,6 +93,25 @@ const Dashboard = () => {
         parcels: Array.isArray(s?.parcels) ? s.parcels : [],
         createdAt: s?.createdAt || new Date().toISOString()
       }));
+
+      // DEBUG (MANDATORY): Type checking and values
+      console.log("TYPE CHECK:", {
+        pickups: {
+          type: typeof pickupsData,
+          isArray: Array.isArray(pickupsData),
+          value: pickupsData
+        },
+        parcels: {
+          type: typeof parcelsData,
+          isArray: Array.isArray(parcelsData),
+          value: parcelsData
+        },
+        shipments: {
+          type: typeof shipmentsData,
+          isArray: Array.isArray(shipmentsData),
+          value: shipmentsData
+        }
+      });
 
       console.log('Dashboard data fetched:', { 
         pickups: validatedPickups, 
