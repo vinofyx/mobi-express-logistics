@@ -1,498 +1,225 @@
-import React, { useState, useEffect } from 'react';
-import { pickupApi } from '../api/pickupApi';
-import { parcelsAPI, shipmentsAPI } from '../lib/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Package, 
-  Truck, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  MapPin, 
-  User, 
-  Phone,
-  RefreshCw,
-  TrendingUp,
-  BarChart3
-} from 'lucide-react';
-import { format } from 'date-fns';
+import React, { useState, useEffect, Component } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { pickupsAPI, parcelsAPI, shipmentsAPI } from '../lib/api';
+import { Package, Truck, MapPin, User, Phone, Clock, RefreshCw, TrendingUp, BarChart3, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 
-const Dashboard = () => {
-  // State variables for data
-  const [pickups, setPickups] = useState([]);
-  const [parcels, setParcels] = useState([]);
+class ErrorBoundary extends Component {
+  state = { error: null };
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (this.state.error) return (
+      <div style={{ padding: 48, textAlign: 'center' }}>
+        <AlertCircle size={40} color="#ef4444" style={{ margin: '0 auto 12px', display: 'block' }} />
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111' }}>Something went wrong</h2>
+        <p style={{ color: '#6b7280', marginTop: 8, fontSize: 13 }}>{this.state.error?.message}</p>
+        <button onClick={() => this.setState({ error: null })} style={{ marginTop: 16, padding: '8px 24px', borderRadius: 8, border: 'none', background: '#4f46e5', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Retry</button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
+const badge = (status) => {
+  const s = (status || '').toLowerCase();
+  const map = {
+    pending: ['#fef3c7','#92400e'], requested: ['#fef3c7','#92400e'],
+    assigned: ['#dbeafe','#1e40af'], in_pickup: ['#dbeafe','#1e40af'],
+    at_center: ['#ede9fe','#5b21b6'], in_transit: ['#ede9fe','#5b21b6'],
+    delivered: ['#d1fae5','#065f46'],
+    returned: ['#fee2e2','#991b1b'], cancelled: ['#fee2e2','#991b1b'],
+  };
+  const [bg, color] = map[s] || ['#f3f4f6','#374151'];
+  return (
+    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: bg, color }}>{status || 'Unknown'}</span>
+  );
+};
+
+const StatCard = ({ label, value, sub, icon: Icon, gradient, iconBg }) => (
+  <div style={{ background: gradient, borderRadius: 16, padding: '20px 24px', boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+      <div style={{ width: 44, height: 44, borderRadius: 12, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,.15)' }}>
+        <Icon size={22} color="#fff" />
+      </div>
+      <TrendingUp size={16} color="rgba(0,0,0,.3)" />
+    </div>
+    <div style={{ fontSize: 28, fontWeight: 800, color: '#111', lineHeight: 1 }}>{value}</div>
+    <div style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginTop: 4 }}>{label}</div>
+    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{sub}</div>
+  </div>
+);
+
+const QuickStat = ({ icon: Icon, label, value, bg, color }) => (
+  <div style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 6px rgba(0,0,0,.06)', display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ width: 40, height: 40, borderRadius: 10, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Icon size={18} color={color} />
+    </div>
+    <div>
+      <div style={{ fontSize: 11, color: '#6b7280' }}>{label}</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: '#111' }}>{value}</div>
+    </div>
+  </div>
+);
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const [pickups,   setPickups]   = useState([]);
+  const [parcels,   setParcels]   = useState([]);
   const [shipments, setShipments] = useState([]);
-  
-  // Loading and error states
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch all dashboard data
-  const fetchDashboardData = async () => {
+  const extract = (res) => {
+    const d = res?.data;
+    if (Array.isArray(d))       return d;
+    if (Array.isArray(d?.data)) return d.data;
+    return [];
+  };
+
+  const fetchAll = async () => {
     try {
       setError('');
-      
-      // Fetch all data in parallel
-      const [pickupsResponse, parcelsResponse, shipmentsResponse] = await Promise.all([
-        pickupApi.getAll(),
-        parcelsAPI.getAll(),
-        shipmentsAPI.getAll()
-      ]);
-
-      // STEP 1: FIX API RESPONSE HANDLING
-      // Add debug logging to see actual structure
-      console.log("PICKUPS API RESPONSE:", pickupsResponse.data);
-      console.log("PARCELS API RESPONSE:", parcelsResponse.data);
-      console.log("SHIPMENTS API RESPONSE:", shipmentsResponse.data);
-      
-      // FINAL 100% FIX: Helper function to safely extract arrays
-      const getArray = (res) => {
-        if (Array.isArray(res?.data)) return res.data;
-        if (Array.isArray(res?.data?.data)) return res.data.data;
-        if (Array.isArray(res?.data?.pickups)) return res.data.pickups;
-        if (Array.isArray(res?.data?.parcels)) return res.data.parcels;
-        if (Array.isArray(res?.data?.shipments)) return res.data.shipments;
-        return [];
-      };
-      
-      const pickupsData = getArray(pickupsResponse);
-      const parcelsData = getArray(parcelsResponse);
-      const shipmentsData = getArray(shipmentsResponse);
-      
-      // CRITICAL FIX: Add Array.isArray validation before all map operations
-      const validatedPickups = (Array.isArray(pickupsData) ? pickupsData : []).map(p => ({
-        _id: p?._id || p?.pickupId || `pickup-${Math.random()}`,
-        pickupId: p?.pickupId || 'N/A',
-        name: p?.name || p?.customer?.name || 'Unknown',
-        phone: p?.phone || p?.customer?.phone || 'N/A',
-        address: p?.address || p?.customer?.address || 'N/A',
-        pickupDate: p?.pickupDate || 'N/A',
-        pickupTime: p?.pickupTime || 'N/A',
-        status: p?.status || 'Unknown'
-      }));
-      
-      const validatedParcels = (Array.isArray(parcelsData) ? parcelsData : []).map(p => ({
-        _id: p?._id || p?.trackingId || `parcel-${Math.random()}`,
-        trackingId: p?.trackingId || 'N/A',
-        status: p?.status || 'Unknown',
-        origin: p?.origin || 'N/A',
-        destination: p?.destination || 'N/A',
-        weight: p?.weight || 'N/A'
-      }));
-      
-      const validatedShipments = (Array.isArray(shipmentsData) ? shipmentsData : []).map(s => ({
-        _id: s?._id || s?.shipmentId || `shipment-${Math.random()}`,
-        shipmentId: s?.shipmentId || 'N/A',
-        status: s?.status || 'Unknown',
-        originHub: s?.originHub || 'N/A',
-        destinationHub: s?.destinationHub || 'N/A',
-        parcels: Array.isArray(s?.parcels) ? s.parcels : [],
-        createdAt: s?.createdAt || new Date().toISOString()
-      }));
-
-      // DEBUG (MANDATORY): Type checking and values
-      console.log("TYPE CHECK:", {
-        pickups: {
-          type: typeof pickupsData,
-          isArray: Array.isArray(pickupsData),
-          value: pickupsData
-        },
-        parcels: {
-          type: typeof parcelsData,
-          isArray: Array.isArray(parcelsData),
-          value: parcelsData
-        },
-        shipments: {
-          type: typeof shipmentsData,
-          isArray: Array.isArray(shipmentsData),
-          value: shipmentsData
-        }
-      });
-
-      console.log('Dashboard data fetched:', { 
-        pickups: validatedPickups, 
-        parcels: validatedParcels, 
-        shipments: validatedShipments 
-      });
-
-      setPickups(validatedPickups);
-      setParcels(validatedParcels);
-      setShipments(validatedShipments);
-      
+      const [p, pa, sh] = await Promise.all([pickupsAPI.getAll(), parcelsAPI.getAll(), shipmentsAPI.getAll()]);
+      setPickups(extract(p));
+      setParcels(extract(pa));
+      setShipments(extract(sh));
     } catch (err) {
-      console.error('Dashboard data fetch error:', err);
-      setError('Failed to load dashboard data. Please try again.');
-      // Set empty arrays on error to prevent map errors
-      setPickups([]);
-      setParcels([]);
-      setShipments([]);
+      setError(err?.response?.data?.message || 'Failed to load data. Is the backend running?');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  // Initial data fetch
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  // Refresh data
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchDashboardData();
-  };
-
-  // Calculate summary statistics with safe array operations
-  const stats = {
-    totalPickups: (pickups || []).length,
-    totalParcels: (parcels || []).length,
-    totalShipments: (shipments || []).length,
-    pendingPickups: (pickups || []).filter(p => p?.status === 'Pending').length,
-    inTransitParcels: (parcels || []).filter(p => p?.status === 'In Transit').length,
-    activeShipments: (shipments || []).filter(s => s?.status && ['Created', 'Dispatched', 'In Transit'].includes(s.status)).length
-  };
-
-  // Status badge component
-  const StatusBadge = ({ status }) => {
-    const getStatusColor = (status) => {
-      switch (status?.toLowerCase()) {
-        case 'pending':
-        case 'created':
-          return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-        case 'confirmed':
-        case 'picked':
-        case 'dispatched':
-          return 'bg-blue-100 text-blue-800 border-blue-200';
-        case 'in transit':
-          return 'bg-purple-100 text-purple-800 border-purple-200';
-        case 'delivered':
-        case 'received':
-          return 'bg-green-100 text-green-800 border-green-200';
-        case 'cancelled':
-          return 'bg-red-100 text-red-800 border-red-200';
-        default:
-          return 'bg-gray-100 text-gray-800 border-gray-200';
-      }
-    };
-
-    return (
-      <Badge className={`text-xs font-medium ${getStatusColor(status)}`}>
-        {status || 'Unknown'}
-      </Badge>
-    );
-  };
-
-  // Loading skeleton
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="h-96 bg-gray-200 rounded-lg"></div>
-              <div className="h-96 bg-gray-200 rounded-lg"></div>
-            </div>
-          </div>
-        </div>
+  if (loading) return (
+    <div style={{ padding: 32 }}>
+      <div style={{ height: 28, background: '#e5e7eb', borderRadius: 8, width: '25%', marginBottom: 24, animation: 'pulse 1.5s ease-in-out infinite' }} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20, marginBottom: 24 }}>
+        {[1,2,3].map(i => <div key={i} style={{ height: 130, background: '#e5e7eb', borderRadius: 16 }} />)}
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Error boundary wrapper
-  const SafeRender = ({ children }) => {
-    try {
-      return children;
-    } catch (error) {
-      console.error('Dashboard render error:', error);
-      return (
-        <div className="min-h-screen bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto">
-            <Alert className="mb-6 border-red-200 bg-red-50">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                Dashboard encountered an error. Please refresh the page.
-              </AlertDescription>
-            </Alert>
-          </div>
-        </div>
-      );
-    }
+  const stats = {
+    pending:  pickups.filter(p  => ['pending','requested'].includes((p?.status||'').toLowerCase())).length,
+    transit:  parcels.filter(p  => (p?.status||'').toLowerCase() === 'in_transit').length,
+    active:   shipments.filter(s => ['created','dispatched','in_transit'].includes((s?.status||'').toLowerCase())).length,
+    delivered: parcels.filter(p => (p?.status||'').toLowerCase() === 'delivered').length,
   };
 
   return (
-    <SafeRender>
-      <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <ErrorBoundary>
+      <div style={{ padding: 32, background: '#f5f5f7', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>
+
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">Logistics system overview and management</p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#111', margin: 0 }}>Admin Dashboard</h1>
+            <p style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Real-time logistics overview</p>
           </div>
-          <Button 
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
+          <button onClick={() => { setRefreshing(true); fetchAll(); }} disabled={refreshing}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 18px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', cursor: 'pointer', fontSize: 13, fontWeight: 600, boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}>
+            <RefreshCw size={14} style={{ animation: refreshing ? 'spin .7s linear infinite' : 'none' }} />
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
 
-        {/* Error Alert */}
         {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              {error}
-            </AlertDescription>
-          </Alert>
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', gap: 10, alignItems: 'center' }}>
+            <AlertCircle size={16} color="#dc2626" />
+            <span style={{ fontSize: 13, color: '#b91c1c' }}>{error}</span>
+          </div>
         )}
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-blue-500 rounded-lg">
-                  <MapPin className="h-6 w-6 text-white" />
-                </div>
-                <TrendingUp className="h-4 w-4 text-blue-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-blue-900">{stats.totalPickups}</p>
-                <p className="text-sm text-blue-700">Total Pickups</p>
-                <p className="text-xs text-blue-600 mt-1">
-                  {stats.pendingPickups} pending
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-purple-500 rounded-lg">
-                  <Package className="h-6 w-6 text-white" />
-                </div>
-                <BarChart3 className="h-4 w-4 text-purple-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-purple-900">{stats.totalParcels}</p>
-                <p className="text-sm text-purple-700">Total Parcels</p>
-                <p className="text-xs text-purple-600 mt-1">
-                  {stats.inTransitParcels} in transit
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-green-500 rounded-lg">
-                  <Truck className="h-6 w-6 text-white" />
-                </div>
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-green-900">{stats.totalShipments}</p>
-                <p className="text-sm text-green-700">Total Shipments</p>
-                <p className="text-xs text-green-600 mt-1">
-                  {stats.activeShipments} active
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Stat cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 20, marginBottom: 28 }}>
+          <StatCard label="Total Pickups"   value={pickups.length}   sub={`${stats.pending} pending`}   icon={MapPin}   gradient="linear-gradient(135deg,#dbeafe,#bfdbfe)" iconBg="#3b82f6" />
+          <StatCard label="Total Parcels"   value={parcels.length}   sub={`${stats.transit} in transit`} icon={Package}   gradient="linear-gradient(135deg,#ede9fe,#ddd6fe)" iconBg="#8b5cf6" />
+          <StatCard label="Total Shipments" value={shipments.length} sub={`${stats.active} active`}     icon={Truck}     gradient="linear-gradient(135deg,#d1fae5,#a7f3d0)" iconBg="#10b981" />
         </div>
 
-        {/* Data Tables */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quick stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 16, marginBottom: 28 }}>
+          <QuickStat icon={Clock}       label="Pending Pickups"  value={stats.pending}   bg="#fef3c7" color="#d97706" />
+          <QuickStat icon={Truck}       label="In Transit"       value={stats.transit}   bg="#ede9fe" color="#7c3aed" />
+          <QuickStat icon={CheckCircle} label="Delivered"        value={stats.delivered} bg="#d1fae5" color="#059669" />
+          <QuickStat icon={BarChart3}   label="Active Shipments" value={stats.active}    bg="#dbeafe" color="#2563eb" />
+        </div>
+
+        {/* Tables */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 24 }}>
+
           {/* Recent Pickups */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Recent Pickups
-              </CardTitle>
-              <CardDescription>
-                Latest pickup requests
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {(!pickups || pickups.length === 0) ? (
-                <div className="text-center py-8 text-gray-500">
-                  <MapPin className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                  <p>No pickups found</p>
+          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,.06)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: 0 }}>Recent Pickups</h3>
+                <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>Latest requests</p>
+              </div>
+              <button onClick={() => navigate('/pickups')} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#4f46e5', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                View all <ArrowRight size={12} />
+              </button>
+            </div>
+            <div style={{ padding: '12px 0' }}>
+              {pickups.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af' }}>
+                  <MapPin size={36} style={{ margin: '0 auto 8px', display: 'block', opacity: .4 }} />
+                  <p style={{ fontSize: 13 }}>No pickups yet</p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {(pickups || []).slice(0, 5).map((pickup, index) => (
-                    <div key={pickup?._id || pickup?.pickupId || `pickup-${index}`} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <User className="h-4 w-4 text-gray-500" />
-                            <span className="font-medium">{pickup?.customer?.name || pickup?.name || 'Unknown'}</span>
-                            <StatusBadge status={pickup?.status || 'Unknown'} />
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {pickup?.customer?.phone || pickup?.phone || 'N/A'}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {pickup?.pickupDate || 'N/A'} {pickup?.pickupTime || 'N/A'}
-                            </div>
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            <MapPin className="h-3 w-3 inline mr-1" />
-                            {pickup?.customer?.address || pickup?.address || 'N/A'}
-                          </div>
-                        </div>
-                      </div>
-                      {pickup.pickupId && (
-                        <div className="text-xs text-gray-500 mt-2">
-                          ID: {pickup?.pickupId || 'N/A'}
-                        </div>
-                      )}
+              ) : pickups.slice(0, 5).map((p, i) => (
+                <div key={p?._id || i} style={{ padding: '12px 24px', borderBottom: i < Math.min(pickups.length,5)-1 ? '1px solid #f9fafb' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#ede9fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <User size={13} color="#7c3aed" />
                     </div>
-                  ))}
+                    <span style={{ fontWeight: 600, fontSize: 13, color: '#111', flex: 1 }}>{p?.customer?.name || p?.name || 'Unknown'}</span>
+                    {badge(p?.status)}
+                  </div>
+                  <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#6b7280', paddingLeft: 36 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Phone size={10} />{p?.customer?.phone || 'N/A'}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Clock size={10} />{p?.pickupDate || 'N/A'}</span>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </div>
 
           {/* Recent Shipments */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
-                Recent Shipments
-              </CardTitle>
-              <CardDescription>
-                Latest shipment updates
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {(!shipments || shipments.length === 0) ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Truck className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                  <p>No shipments found</p>
+          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,.06)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: 0 }}>Recent Shipments</h3>
+                <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>Latest updates</p>
+              </div>
+              <button onClick={() => navigate('/shipments')} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#4f46e5', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                View all <ArrowRight size={12} />
+              </button>
+            </div>
+            <div style={{ padding: '12px 0' }}>
+              {shipments.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af' }}>
+                  <Truck size={36} style={{ margin: '0 auto 8px', display: 'block', opacity: .4 }} />
+                  <p style={{ fontSize: 13 }}>No shipments yet</p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {(shipments || []).slice(0, 5).map((shipment, index) => (
-                    <div key={shipment?._id || shipment?.shipmentId || `shipment-${index}`} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-mono text-sm font-medium">
-                              {shipment?.shipmentId || 'N/A'}
-                            </span>
-                            <StatusBadge status={shipment?.status || 'Unknown'} />
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <div>
-                              <span className="font-medium">From:</span> {shipment?.originHub || 'N/A'}
-                            </div>
-                            <div>
-                              <span className="font-medium">To:</span> {shipment?.destinationHub || 'N/A'}
-                            </div>
-                          </div>
-                          {shipment.parcels && shipment.parcels.length > 0 && (
-                            <div className="text-sm text-gray-600 mt-1">
-                              <Package className="h-3 w-3 inline mr-1" />
-                              {shipment.parcels.length} parcel(s)
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Created: {shipment?.createdAt ? format(new Date(shipment.createdAt), 'PPp') : 'N/A'}
-                      </div>
-                    </div>
-                  ))}
+              ) : shipments.slice(0, 5).map((s, i) => (
+                <div key={s?._id || i} style={{ padding: '12px 24px', borderBottom: i < Math.min(shipments.length,5)-1 ? '1px solid #f9fafb' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#374151', flex: 1 }}>{s?.shipmentId || s?._id?.slice(-8) || 'N/A'}</span>
+                    {badge(s?.status)}
+                  </div>
+                  <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#6b7280' }}>
+                    <span>From: <strong>{s?.originHub || 'N/A'}</strong></span>
+                    <span>To: <strong>{s?.destinationHub || 'N/A'}</strong></span>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-4 w-4 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Pending Pickups</p>
-                <p className="text-lg font-semibold">{stats.pendingPickups}</p>
-              </div>
+              ))}
             </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Truck className="h-4 w-4 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">In Transit</p>
-                <p className="text-lg font-semibold">{stats.inTransitParcels}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Delivered</p>
-                <p className="text-lg font-semibold">
-                  {(parcels || []).filter(p => p?.status === 'Delivered').length}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <BarChart3 className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Active Shipments</p>
-                <p className="text-lg font-semibold">{stats.activeShipments}</p>
-              </div>
-            </div>
-          </Card>
+          </div>
         </div>
       </div>
-    </div>
-    </SafeRender>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
+    </ErrorBoundary>
   );
-};
-
-export default Dashboard;
+}

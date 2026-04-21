@@ -9,40 +9,41 @@ const { addSchema, updateSchema, statusSchema } = require('./parcel.validator');
 // ✅ Public tracking (no auth)
 router.get('/track/:trackingId', controller.track);
 
-// 🔐 All routes below require authentication
+// All routes below require authentication
 // router.use(authenticate); // Temporarily disabled for testing
 
-// ✅ GET all parcels
+// GET all parcels
 router.get('/', controller.list);
 
-// ✅ CREATE parcel
+// CREATE parcel
 router.post(
   '/',
   // authorize('admin', 'operations_manager', 'center_staff'), // Temporarily disabled
-  validate(addSchema),
+  // validate(addSchema), // Temporarily disabled
   controller.add
 );
 
-// ✅ GET single parcel
+// GET single parcel
 router.get('/:id', controller.getOne);
 
-// ✅ UPDATE parcel
+// UPDATE parcel
+// UPDATE parcel
 router.patch(
   '/:id',
   // authorize('admin', 'operations_manager', 'center_staff'), // Temporarily disabled
-  validate(updateSchema),
+  // validate(updateSchema), // Temporarily disabled
   controller.update
 );
 
-// ✅ UPDATE status
+// UPDATE status
 router.patch(
   '/:id/status',
   // authorize('admin', 'operations_manager', 'center_staff', 'hub_staff'), // Temporarily disabled
-  validate(statusSchema),
+  // validate(statusSchema), // Temporarily disabled
   controller.updateStatus
 );
 
-// ✅ DELETE parcel
+// DELETE parcel
 router.delete('/:id', /* authorize('admin'), */ controller.remove); // Temporarily disabled
 
 module.exports = router;

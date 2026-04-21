@@ -19,8 +19,8 @@ const ALLOWED_TRANSITIONS = {
 exports.add = catchAsync(async (req, res) => {
   const parcel = await Parcel.create({
     ...req.body,
-    createdBy:     req.user._id,
-    statusHistory: [{ status: PARCEL_STATUS.PENDING, updatedBy: req.user._id }],
+    createdBy:     req.user?._id || null,
+    statusHistory: [{ status: PARCEL_STATUS.PENDING, updatedBy: req.user?._id || null }],
   });
   return apiResponse(res, 201, 'Parcel added.', { parcel });
 });
@@ -82,7 +82,7 @@ exports.updateStatus = catchAsync(async (req, res) => {
   }
 
   parcel.status = status;
-  parcel.statusHistory.push({ status, updatedBy: req.user._id, note, location });
+  parcel.statusHistory.push({ status, updatedBy: req.user?._id || null, note, location });
   await parcel.save();
 
   return apiResponse(res, 200, 'Parcel status updated.', { parcel });

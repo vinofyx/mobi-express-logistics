@@ -39,8 +39,8 @@ exports.create = catchAsync(async (req, res) => {
     route:          route ?? [],
     expectedArrival,
     dispatchedAt:   new Date(),
-    createdBy:      req.user._id,
-    statusHistory:  [{ status: SHIPMENT_STATUS.DISPATCHED, updatedBy: req.user._id }],
+    createdBy:      req.user?._id || null,
+    statusHistory:  [{ status: SHIPMENT_STATUS.DISPATCHED, updatedBy: req.user?._id || null }],
   });
 
   // Move parcels to In Transit
@@ -48,7 +48,7 @@ exports.create = catchAsync(async (req, res) => {
     { _id: { $in: parcelIds } },
     {
       $set:  { status: PARCEL_STATUS.IN_TRANSIT, shipment: shipment._id },
-      $push: { statusHistory: { status: PARCEL_STATUS.IN_TRANSIT, updatedBy: req.user._id } },
+      $push: { statusHistory: { status: PARCEL_STATUS.IN_TRANSIT, updatedBy: req.user?._id || null } },
     },
   );
 
@@ -105,7 +105,7 @@ exports.assignParcels = catchAsync(async (req, res) => {
     { _id: { $in: parcelIds } },
     {
       $set:  { status: PARCEL_STATUS.IN_TRANSIT, shipment: shipment._id },
-      $push: { statusHistory: { status: PARCEL_STATUS.IN_TRANSIT, updatedBy: req.user._id } },
+      $push: { statusHistory: { status: PARCEL_STATUS.IN_TRANSIT, updatedBy: req.user?._id || null } },
     },
   );
 
@@ -130,7 +130,7 @@ exports.updateStatus = catchAsync(async (req, res) => {
   }
 
   shipment.status = status;
-  shipment.statusHistory.push({ status, updatedBy: req.user._id, note, location });
+  shipment.statusHistory.push({ status, updatedBy: req.user?._id || null, note, location });
   if (status === SHIPMENT_STATUS.RECEIVED) shipment.receivedAt = new Date();
   await shipment.save();
 
@@ -140,7 +140,7 @@ exports.updateStatus = catchAsync(async (req, res) => {
       { shipment: shipment._id },
       {
         $set:  { status: PARCEL_STATUS.DELIVERED },
-        $push: { statusHistory: { status: PARCEL_STATUS.DELIVERED, updatedBy: req.user._id, note: 'Shipment received at destination hub.' } },
+        $push: { statusHistory: { status: PARCEL_STATUS.DELIVERED, updatedBy: req.user?._id || null, note: 'Shipment received at destination hub.' } },
       },
     );
   }

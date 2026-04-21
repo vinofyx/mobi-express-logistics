@@ -1,7 +1,7 @@
 {
-  "name": "customer-pickup-api",
+  "name": "bobbaexpress-api",
   "version": "1.0.0",
-  "description": "Customer & Pickup REST API — Express + MongoDB",
+  "description": "BobbaExpress Customer & Pickup REST API - Express + MongoDB",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

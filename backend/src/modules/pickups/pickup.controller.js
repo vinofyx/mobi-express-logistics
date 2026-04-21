@@ -19,8 +19,8 @@ const ALLOWED_TRANSITIONS = {
 exports.create = catchAsync(async (req, res) => {
   const pickup = await Pickup.create({
     ...req.body,
-    createdBy: req.user._id,
-    statusHistory: [{ status: PICKUP_STATUS.REQUESTED, updatedBy: req.user._id }],
+    createdBy:     req.user?._id,
+    statusHistory: [{ status: PICKUP_STATUS.REQUESTED, updatedBy: req.user?._id }],
   });
   return apiResponse(res, 201, 'Pickup request created.', { pickup });
 });
@@ -29,7 +29,7 @@ exports.create = catchAsync(async (req, res) => {
 exports.list = catchAsync(async (req, res) => {
   const filter = {};
 
-  if (req.user.role === ROLES.FIELD_AGENT) {
+  if (req.user?.role === ROLES.FIELD_AGENT) {
     filter.assignedAgent = req.user._id;
   }
   if (req.query.status)   filter.status   = req.query.status;
@@ -79,7 +79,7 @@ exports.assign = catchAsync(async (req, res) => {
 
   pickup.assignedAgent = agentId;
   pickup.status        = PICKUP_STATUS.ASSIGNED;
-  pickup.statusHistory.push({ status: PICKUP_STATUS.ASSIGNED, updatedBy: req.user._id });
+  pickup.statusHistory.push({ status: PICKUP_STATUS.ASSIGNED, updatedBy: req.user?._id });
   await pickup.save();
 
   return apiResponse(res, 200, 'Pickup assigned to field agent.', { pickup });

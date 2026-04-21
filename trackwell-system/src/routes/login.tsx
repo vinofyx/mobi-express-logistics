@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import LoginEnhanced from "@/pages/LoginEnhanced";
+import LoginPage from "@/pages/LoginPage";
 
 export const Route = createFileRoute("/login")({
-  component: LoginEnhanced,
+  component: LoginPage,
   head: () => ({
     meta: [
       { title: "Sign in - Mobi Express" },
-      { name: "description", content: "Sign in to your Mobi Express account" }
+      { name: "description", content: "Sign in to your Mobi Express account" },
     ],
   }),
 });

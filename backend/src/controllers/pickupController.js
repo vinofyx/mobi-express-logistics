@@ -1,5 +1,5 @@
 const Pickup   = require("../models/Pickup");
-const Customer = require("../models/Customer");
+const Customer = require("../modules/customers/customer.model");
 
 // Valid status transitions — prevents illogical jumps
 const TRANSITIONS = {

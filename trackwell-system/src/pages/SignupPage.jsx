@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Logo } from '@/components/Logo';
-import { Eye, EyeOff, UserPlus, Mail, Lock, Phone } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { authService } from '@/lib/authService';
-import { useAuth } from '@/lib/auth-context';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Logo } from '../components/Logo';
+import { Eye, EyeOff, UserPlus, User, Mail, Lock, Phone } from 'lucide-react';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { authService } from '../lib/authService';
+import { useAuth } from '../lib/auth-context';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -111,7 +111,8 @@ const SignupPage = () => {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setApiError('Network error. Please try again.');
+      const msg = error?.response?.data?.message || error?.message || 'Registration failed. Please try again.';
+      setApiError(msg);
     } finally {
       setLoading(false);
     }
@@ -278,8 +279,9 @@ const SignupPage = () => {
                 </Label>
                 <select
                   id="role"
+                  name="role"
                   value={formData.role}
-                  onChange={(e) => handleInputChange('role', e.target.value)}
+                  onChange={handleInputChange}
                   className={`w-full ${errors.role ? 'border-red-500' : ''}`}
                   disabled={loading}
                 >

@@ -18,6 +18,7 @@ const signRefreshToken = (id) =>
 // ─── Register ─────────────────────────────────────────────────────────────────
 
 exports.register = catchAsync(async (req, res) => {
+  console.log("REQ BODY:", req.body);
   const { name, email, password, role } = req.body;
 
   const existing = await User.findOne({ email });

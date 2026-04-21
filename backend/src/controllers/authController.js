@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require('../modules/users/user.model');
 const catchAsync = require('../shared/utils/catchAsync');
 const apiResponse = require('../shared/utils/apiResponse');
 
@@ -27,17 +27,18 @@ const generateRefreshToken = (userId) => {
 
 // Register user (for initial setup)
 exports.register = catchAsync(async (req, res) => {
+  console.log("REQ BODY:", req.body);
   try {
     const { name, email, password, role, phone, address } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return apiResponse.error(res, 400, 'User with this email already exists');
+      return apiResponse.error(res, 400, 'Email already exists');
     }
 
     // Create new user
-    const user = new User({
+    const user = await User.create({
       name,
       email,
       password,
@@ -46,23 +47,22 @@ exports.register = catchAsync(async (req, res) => {
       address
     });
 
-    await user.save();
-
     // Generate tokens
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    // Update last login
-    await user.updateLastLogin();
+    if (typeof user.updateLastLogin === 'function') {
+      user.updateLastLogin().catch(err => console.error('updateLastLogin failed:', err));
+    }
 
-    apiResponse.success(res, 'User registered successfully', {
+    apiResponse.success(res, 'Signup successful', {
       user,
       token,
       refreshToken
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    apiResponse.error(res, 500, 'Failed to register user');
+    console.error('Signup error:', error);
+    apiResponse.error(res, 500, error.message);
   }
 });
 
@@ -88,10 +88,10 @@ exports.login = catchAsync(async (req, res) => {
     const token = generateToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    // Update last login
-    await user.updateLastLogin();
+    if (typeof user.updateLastLogin === 'function') {
+      user.updateLastLogin().catch(err => console.error('updateLastLogin failed:', err));
+    }
 
-    // Remove password from response
     const userWithoutPassword = user.toJSON();
 
     apiResponse.success(res, 'Login successful', {
@@ -101,7 +101,7 @@ exports.login = catchAsync(async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    apiResponse.error(res, 500, 'Failed to login');
+    apiResponse.error(res, 500, error.message || 'Failed to login');
   }
 });
 

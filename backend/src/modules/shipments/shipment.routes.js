@@ -1,6 +1,6 @@
 const express      = require('express');
 const router       = express.Router();
-const controller   = require('./shipment.controller.mock');
+const controller   = require('./shipment.controller');
 // const authenticate = require('../../middleware/authenticate');
 // const authorize    = require('../../middleware/authorize');
 // const validate     = require('../../middleware/validate');

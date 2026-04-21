@@ -53,7 +53,7 @@ export function DashboardLayout({
           </Link>
         </div>
         <nav className="flex-1 space-y-1 p-3">
-          {nav.map((item) => {
+          {(Array.isArray(nav) ? nav : []).map((item) => {
             const active =
               location.pathname === item.to ||
               (item.to !== "/dashboard" && location.pathname.startsWith(item.to));
@@ -96,7 +96,7 @@ export function DashboardLayout({
 
         {/* Mobile nav */}
         <nav className="flex gap-1 overflow-x-auto border-b bg-background px-2 py-2 md:hidden">
-          {nav.map((item) => {
+          {(Array.isArray(nav) ? nav : []).map((item) => {
             const active = location.pathname === item.to;
             return (
               <Link
@@ -116,7 +116,7 @@ export function DashboardLayout({
         <header className="border-b bg-background px-6 py-4">
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           <p className="mt-1 text-xs text-muted-foreground md:hidden">
-            {roles.map((r) => ROLE_LABELS[r]).join(" · ")}
+            {(Array.isArray(roles) ? roles : []).map((r) => ROLE_LABELS[r]).join(" · ")}
           </p>
         </header>
 

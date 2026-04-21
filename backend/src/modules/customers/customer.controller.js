@@ -6,7 +6,7 @@ const paginate    = require('../../shared/utils/paginate');
 // ─── Create ───────────────────────────────────────────────────────────────────
 
 exports.create = catchAsync(async (req, res) => {
-  const customer = await Customer.create({ ...req.body, createdBy: req.user._id });
+  const customer = await Customer.create({ ...req.body, createdBy: req.user?._id });
   return apiResponse(res, 201, 'Customer created.', { customer });
 });
 

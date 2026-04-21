@@ -1,19 +1,31 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-const AuthContext = createContext();
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+// Role types
+export const AppRole = {
+  ADMIN: "admin",
+  CUSTOMER: "customer", 
+  AGENT: "agent",
+  CENTER_OPERATOR: "center_operator"
 };
 
-export const AuthProvider = ({ children }) => {
+// User shape for reference
+export const UserShape = {
+  _id: "",
+  name: "",
+  email: "",
+  role: "",
+  phone: "",
+  address: "",
+  isActive: true,
+  createdAt: "",
+};
+
+const AuthContext = createContext(undefined);
+
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Load user from localStorage on initial load
   useEffect(() => {
@@ -59,12 +71,12 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user has specific role
   const hasRole = (role) => {
-    return user && user.role === role;
+    return user ? user.role === role : false;
   };
 
   // Check if user has any of the specified roles
   const hasAnyRole = (roles) => {
-    return user && roles.includes(user.role);
+    return user ? roles.includes(user.role) : false;
   };
 
   // Get user roles
@@ -72,23 +84,37 @@ export const AuthProvider = ({ children }) => {
     return user ? [user.role] : [];
   };
 
-  const value = {
-    user,
-    token,
-    loading,
-    login,
-    logout,
-    isAuthenticated: !!token,
-    hasRole,
-    hasAnyRole,
-    getRoles
-  };
+  const roles = user ? [user.role] : [];
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      token,
+      loading,
+      login,
+      logout,
+      signOut: logout,
+      isAuthenticated: !!token,
+      hasRole,
+      hasAnyRole,
+      getRoles,
+      roles,
+    }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}
+
+export function useHasRole(role) {
+  const { getRoles } = useAuth();
+  const roles = getRoles();
+  return roles.includes(role);
+}
 
 export default AuthContext;

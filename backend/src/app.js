@@ -4,17 +4,19 @@ const express        = require("express");
 const cors           = require("cors");
 const connectDB      = require("./config/db");
 
-// ✅ Existing routes
-// const customerRoutes = require("./routes/customerRoutes");
-// const pickupRoutes   = require("./routes/pickupRoutes");
+// Module-based pickup routes (replaces old routes/pickupRoutes)
+const pickupRoutes   = require("./modules/pickups/pickup.routes");
 
 // ✅ NEW: Parcel routes (IMPORTANT)
-// const parcelRoutes   = require("./modules/parcels/parcel.routes");
+const parcelRoutes    = require("./modules/parcels/parcel.routes");
 
 // ✅ NEW: Shipment routes
-// const shipmentRoutes = require("./modules/shipments/shipment.routes");
+const shipmentRoutes  = require("./modules/shipments/shipment.routes");
 
-// NEW: Auth routes
+// Customer routes
+const customerRoutes  = require("./modules/customers/customer.routes");
+
+// Auth routes
 const authRoutes = require("./routes/authRoutes");
 
 connectDB();
@@ -30,22 +32,35 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // ── Root Route (fix "/" error) ────────────────────────────────────────────────
-// app.get("/", (req, res) => {
-//   res.send("LMS API Running 🚀");
-// });
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "MobiExpress API Running 🚀"
+  });
+});
+
+// ── API Test Route ───────────────────────────────────────────────────────────
+app.get("/api/test", (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'API is running successfully' 
+  });
+});
+
+// ── API Root Route ───────────────────────────────────────────────────────────
+app.get("/api", (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'API root working' 
+  });
+});
 
 // ── API Routes ────────────────────────────────────────────────────────────────
-// app.use("/api/customers", customerRoutes);
-// app.use("/api/pickups",   pickupRoutes);
-
-// ✅ IMPORTANT: Add parcel route here
-// app.use("/api/parcels", parcelRoutes);
-
-// ✅ Add shipment routes
-// app.use("/api/shipments", shipmentRoutes);
-
-// Add auth routes
-app.use("/api/auth", authRoutes);
+app.use("/api/customers", customerRoutes);
+app.use("/api/pickups",    pickupRoutes);
+app.use("/api/parcels",   parcelRoutes);
+app.use("/api/shipments", shipmentRoutes);
+app.use("/api/auth",      authRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/health", (req, res) =>

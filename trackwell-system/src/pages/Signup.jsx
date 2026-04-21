@@ -26,8 +26,12 @@ const Signup = () => {
       alert("Signup successful");
       console.log(res);
     } catch (err) {
-      alert("Signup failed");
-      console.error(err);
+      console.log(err.response?.data);
+      
+      alert(
+        err.response?.data?.message ||
+        "Signup failed. Please try again."
+      );
     }
   };
 

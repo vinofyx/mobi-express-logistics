@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? "/api"
+    : "http://localhost:5000/api",
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -39,7 +41,7 @@ API.interceptors.response.use(
 export const authService = {
   login: async (data) => {
     try {
-      const response = await API.post("/auth/login", data);
+      const response = await API.post("/api/v1/auth/login", data);
       
       // Validate response structure
       if (!response.data?.success) {
@@ -63,7 +65,7 @@ export const authService = {
       
       console.log('Signup data:', signupData);
       
-      const response = await API.post("/auth/register", signupData);
+      const response = await API.post("/api/v1/auth/register", signupData);
       
       // Validate response structure
       if (!response.data?.success) {
