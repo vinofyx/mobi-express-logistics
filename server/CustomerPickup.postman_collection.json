@@ -1,0 +1,192 @@
+{
+  "info": {
+    "name": "Customer & Pickup API",
+    "_postman_id": "lms-customer-pickup-v1",
+    "description": "Sample requests for Customer and Pickup modules",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",     "value": "http://localhost:5000" },
+    { "key": "customerId",  "value": "" },
+    { "key": "pickupId",    "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/customers/create", "host": ["{{baseUrl}}"], "path": ["api","customers","create"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ravi Kumar\",\n  \"phone\": \"9876543210\",\n  \"address\": {\n    \"street\": \"12 MG Road\",\n    \"city\": \"Hyderabad\",\n    \"state\": \"Telangana\",\n    \"pincode\": \"500001\"\n  },\n  \"gst\": \"36AABCT1332L1ZK\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Customer created successfully.\",\n  \"data\": {\n    \"customer\": {\n      \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"name\": \"Ravi Kumar\",\n      \"phone\": \"9876543210\",\n      \"address\": {\n        \"street\": \"12 MG Road\",\n        \"city\": \"Hyderabad\",\n        \"state\": \"Telangana\",\n        \"pincode\": \"500001\"\n      },\n      \"gst\": \"36AABCT1332L1ZK\",\n      \"createdAt\": \"2026-04-17T10:00:00.000Z\",\n      \"updatedAt\": \"2026-04-17T10:00:00.000Z\"\n    }\n  }\n}"
+            },
+            {
+              "name": "409 Duplicate Phone",
+              "status": "Conflict",
+              "code": 409,
+              "body": "{\n  \"success\": false,\n  \"message\": \"A customer with this phone number already exists.\"\n}"
+            },
+            {
+              "name": "422 Validation Error",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed.\",\n  \"errors\": [\n    \"Customer name is required.\",\n    \"Enter a valid 10-digit Indian mobile number.\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/customers?page=1&limit=10&search=ravi",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","customers"],
+              "query": [
+                { "key": "page",   "value": "1",    "description": "Page number (default 1)" },
+                { "key": "limit",  "value": "10",   "description": "Results per page (max 100)" },
+                { "key": "search", "value": "ravi", "description": "Filter by name or phone (optional)" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Customers retrieved.\",\n  \"data\": {\n    \"customers\": [\n      {\n        \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n        \"name\": \"Ravi Kumar\",\n        \"phone\": \"9876543210\",\n        \"address\": {\n          \"street\": \"12 MG Road\",\n          \"city\": \"Hyderabad\",\n          \"state\": \"Telangana\",\n          \"pincode\": \"500001\"\n        },\n        \"gst\": \"36AABCT1332L1ZK\",\n        \"createdAt\": \"2026-04-17T10:00:00.000Z\"\n      }\n    ]\n  },\n  \"meta\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 10,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pickup",
+      "item": [
+        {
+          "name": "Create Pickup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/pickups/create", "host": ["{{baseUrl}}"], "path": ["api","pickups","create"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"pickupDate\": \"2026-04-20\",\n  \"pickupTime\": \"10:30\",\n  \"assignedAgent\": null\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Pickup request created.\",\n  \"data\": {\n    \"pickup\": {\n      \"_id\": \"775f1a2b3c4d5e6f7a8b9c1e\",\n      \"customerId\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"pickupDate\": \"2026-04-20T00:00:00.000Z\",\n      \"pickupTime\": \"10:30\",\n      \"assignedAgent\": null,\n      \"status\": \"Requested\",\n      \"statusLog\": [\n        { \"status\": \"Requested\", \"note\": \"Pickup request created.\", \"changedAt\": \"2026-04-17T10:05:00.000Z\" }\n      ],\n      \"createdAt\": \"2026-04-17T10:05:00.000Z\"\n    }\n  }\n}"
+            },
+            {
+              "name": "404 Customer Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Customer not found.\"\n}"
+            },
+            {
+              "name": "400 Past Date",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"pickupDate must be today or a future date.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Pickups",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/pickups?page=1&limit=10&status=Requested",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","pickups"],
+              "query": [
+                { "key": "page",       "value": "1",         "description": "Page number" },
+                { "key": "limit",      "value": "10",        "description": "Results per page" },
+                { "key": "status",     "value": "Requested", "description": "Filter by status (optional)" },
+                { "key": "customerId", "value": "",          "description": "Filter by customer ObjectId (optional)", "disabled": true },
+                { "key": "date",       "value": "",          "description": "Filter by date YYYY-MM-DD (optional)", "disabled": true }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Pickups retrieved.\",\n  \"data\": {\n    \"pickups\": [\n      {\n        \"_id\": \"775f1a2b3c4d5e6f7a8b9c1e\",\n        \"customerId\": {\n          \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n          \"name\": \"Ravi Kumar\",\n          \"phone\": \"9876543210\",\n          \"address\": { \"city\": \"Hyderabad\", \"state\": \"Telangana\" }\n        },\n        \"pickupDate\": \"2026-04-20T00:00:00.000Z\",\n        \"pickupTime\": \"10:30\",\n        \"assignedAgent\": null,\n        \"status\": \"Requested\",\n        \"statusLog\": [\n          { \"status\": \"Requested\", \"note\": \"Pickup request created.\", \"changedAt\": \"2026-04-17T10:05:00.000Z\" }\n        ]\n      }\n    ]\n  },\n  \"meta\": { \"total\": 1, \"page\": 1, \"limit\": 10, \"totalPages\": 1 }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Pickup Status — Assign",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/pickups/{{pickupId}}/status", "host": ["{{baseUrl}}"], "path": ["api","pickups","{{pickupId}}","status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Assigned\",\n  \"assignedAgent\": \"Arjun Mehta\",\n  \"note\": \"Agent assigned for morning slot.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Pickup status updated to 'Assigned'.\",\n  \"data\": {\n    \"pickup\": {\n      \"_id\": \"775f1a2b3c4d5e6f7a8b9c1e\",\n      \"status\": \"Assigned\",\n      \"assignedAgent\": \"Arjun Mehta\",\n      \"statusLog\": [\n        { \"status\": \"Requested\", \"note\": \"Pickup request created.\", \"changedAt\": \"2026-04-17T10:05:00.000Z\" },\n        { \"status\": \"Assigned\",  \"note\": \"Agent assigned for morning slot.\", \"changedAt\": \"2026-04-17T10:10:00.000Z\" }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Pickup Status — Picked",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/pickups/{{pickupId}}/status", "host": ["{{baseUrl}}"], "path": ["api","pickups","{{pickupId}}","status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Picked\",\n  \"note\": \"3 parcels collected from customer.\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Pickup Status — Failed",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/pickups/{{pickupId}}/status", "host": ["{{baseUrl}}"], "path": ["api","pickups","{{pickupId}}","status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Failed\",\n  \"note\": \"Customer not available at address.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "400 Invalid Transition",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Cannot move from 'Picked' to 'Failed'. Allowed: [none]\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: monospace;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            background-color: #e2e3e5;
+            border: 1px solid #d6d8db;
+            color: #383d41;
+        }
+        .sample-ids {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .sample-id {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+            margin-right: 15px;
+        }
+        .sample-id:hover {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Parcel Tracking Test</h1>
+        <p>Test the parcel tracking functionality with the backend API.</p>
+        
+        <div class="form-group">
+            <label for="trackingId">Tracking ID:</label>
+            <input type="text" id="trackingId" placeholder="Enter tracking ID (e.g., LMS-HYD-20260417-XYZ1)">
+        </div>
+        
+        <button onclick="trackPackage()" id="trackButton">Track Package</button>
+        
+        <div id="result"></div>
+        
+        <div class="sample-ids">
+            <h3>Sample Tracking IDs:</h3>
+            <span class="sample-id" onclick="setTrackingId('LMS-HYD-20260417-XYZ1')">LMS-HYD-20260417-XYZ1 (Parcel)</span>
+            <span class="sample-id" onclick="setTrackingId('SHP-HYD-20260417-ABC1')">SHP-HYD-20260417-ABC1 (Shipment)</span>
+            <span class="sample-id" onclick="setTrackingId('LMS-BLR-20260417-DEF2')">LMS-BLR-20260417-DEF2 (Parcel)</span>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>API Endpoints:</h3>
+            <ul>
+                <li><strong>Backend:</strong> <span id="backendUrl">http://localhost:5001</span></li>
+                <li><strong>Parcel Tracking:</strong> GET /api/parcels/track/:trackingId</li>
+                <li><strong>Shipment Tracking:</strong> GET /api/shipments/track/:shipmentId</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentPort = 5001;
+        
+        // Try to detect which port the backend is running on
+        async function detectBackendPort() {
+            const ports = [5000, 5001, 5002];
+            
+            for (const port of ports) {
+                try {
+                    const response = await fetch(`http://localhost:${port}/health`);
+                    if (response.ok) {
+                        currentPort = port;
+                        document.getElementById('backendUrl').textContent = `http://localhost:${port}`;
+                        console.log(`Backend detected on port ${port}`);
+                        return port;
+                    }
+                } catch (error) {
+                    // Port not available, try next
+                }
+            }
+            
+            console.log('Backend not detected on any port');
+            return null;
+        }
+        
+        // Initialize
+        detectBackendPort();
+        
+        function setTrackingId(trackingId) {
+            document.getElementById('trackingId').value = trackingId;
+        }
+        
+        async function trackPackage() {
+            const trackingId = document.getElementById('trackingId').value.trim();
+            const resultDiv = document.getElementById('result');
+            const trackButton = document.getElementById('trackButton');
+            
+            if (!trackingId) {
+                resultDiv.innerHTML = '<div class="error">Please enter a tracking ID</div>';
+                return;
+            }
+            
+            // Show loading state
+            trackButton.disabled = true;
+            trackButton.textContent = 'Tracking...';
+            resultDiv.innerHTML = '<div class="loading">Tracking package...</div>';
+            
+            try {
+                // First try as parcel
+                console.log(`Trying parcel tracking on port ${currentPort}`);
+                const parcelResponse = await fetch(`http://localhost:${currentPort}/api/parcels/track/${trackingId}`);
+                
+                if (parcelResponse.ok) {
+                    const data = await parcelResponse.json();
+                    if (data.success) {
+                        displayResult(data, 'parcel');
+                        return;
+                    }
+                }
+                
+                // If parcel tracking failed, try shipment tracking
+                console.log(`Trying shipment tracking on port ${currentPort}`);
+                const shipmentResponse = await fetch(`http://localhost:${currentPort}/api/shipments/track/${trackingId}`);
+                
+                if (shipmentResponse.ok) {
+                    const data = await shipmentResponse.json();
+                    if (data.success) {
+                        displayResult(data, 'shipment');
+                        return;
+                    }
+                }
+                
+                // If both failed
+                resultDiv.innerHTML = '<div class="error">Tracking ID not found. Please check the ID and try again.</div>';
+                
+            } catch (error) {
+                console.error('Tracking error:', error);
+                resultDiv.innerHTML = '<div class="error">Failed to connect to backend. Please ensure the server is running.</div>';
+            } finally {
+                trackButton.disabled = false;
+                trackButton.textContent = 'Track Package';
+            }
+        }
+        
+        function displayResult(data, type) {
+            const resultDiv = document.getElementById('result');
+            const item = data.data;
+            
+            let html = '<div class="success">';
+            html += `<h3>${type === 'parcel' ? 'Parcel' : 'Shipment'} Found!</h3>`;
+            html += `<p><strong>Tracking ID:</strong> ${item.trackingId || item.shipmentId}</p>`;
+            html += `<p><strong>Status:</strong> ${item.status}</p>`;
+            
+            if (type === 'parcel') {
+                html += `<p><strong>From:</strong> ${item.pickupAddress?.city}, ${item.pickupAddress?.state}</p>`;
+                html += `<p><strong>To:</strong> ${item.destinationAddress?.city}, ${item.destinationAddress?.state}</p>`;
+                html += `<p><strong>Recipient:</strong> ${item.recipientName}</p>`;
+            } else {
+                html += `<p><strong>From:</strong> ${item.originHub}</p>`;
+                html += `<p><strong>To:</strong> ${item.destinationHub}</p>`;
+                html += `<p><strong>Parcels:</strong> ${item.parcels?.length || 0}</p>`;
+            }
+            
+            html += `<p><strong>Created:</strong> ${new Date(item.createdAt).toLocaleString()}</p>`;
+            
+            if (item.statusHistory && item.statusHistory.length > 0) {
+                html += '<h4>Tracking History:</h4><ul>';
+                item.statusHistory.forEach(event => {
+                    html += `<li><strong>${event.status}</strong> - ${event.location || 'Unknown'} - ${new Date(event.timestamp).toLocaleString()}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            html += '</div>';
+            resultDiv.innerHTML = html;
+        }
+        
+        // Allow Enter key to trigger tracking
+        document.getElementById('trackingId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                trackPackage();
+            }
+        });
+    </script>
+</body>
+</html>

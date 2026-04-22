@@ -1,0 +1,216 @@
+{
+  "info": {
+    "name": "Parcel Center API",
+    "_postman_id": "parcel-center-v1",
+    "description": "Complete API for Parcel Center Management with tracking IDs and state machine",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "parcelId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Parcel Operations",
+      "item": [
+        {
+          "name": "Create Parcel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/parcels/create", "host": ["{{baseUrl}}"], "path": ["api","parcels","create"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senderName\": \"Amit Sharma\",\n  \"senderPhone\": \"9876543210\",\n  \"recipientName\": \"Priya Patel\",\n  \"recipientPhone\": \"9123456789\",\n  \"pickupAddress\": {\n    \"street\": \"12 Nehru Street\",\n    \"city\": \"Hyderabad\",\n    \"state\": \"Telangana\",\n    \"pincode\": \"500001\"\n  },\n  \"destinationAddress\": {\n    \"street\": \"45 MG Road\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pincode\": \"400001\"\n  },\n  \"description\": \"Electronics - Laptop\",\n  \"weight\": 2.5,\n  \"dimensions\": {\n    \"length\": 40,\n    \"width\": 30,\n    \"height\": 10\n  },\n  \"priority\": \"Express\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Parcel created successfully.\",\n  \"data\": {\n    \"parcel\": {\n      \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"trackingId\": \"LMS-HYD-20260417-8X4P-M7K2\",\n      \"senderName\": \"Amit Sharma\",\n      \"senderPhone\": \"9876543210\",\n      \"recipientName\": \"Priya Patel\",\n      \"recipientPhone\": \"9123456789\",\n      \"status\": \"Picked\",\n      \"priority\": \"Express\",\n      \"isDamaged\": false,\n      \"centerCode\": \"HYD\",\n      \"statusHistory\": [\n        { \"status\": \"Picked\", \"note\": \"Parcel picked up from sender\", \"timestamp\": \"2026-04-17T10:00:00.000Z\" }\n      ],\n      \"createdAt\": \"2026-04-17T10:00:00.000Z\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Parcels",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/parcels?page=1&limit=10&status=Picked&destination=Mumbai&priority=Express&sortBy=createdAt&order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","parcels"],
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number" },
+                { "key": "limit", "value": "10", "description": "Results per page" },
+                { "key": "status", "value": "Picked", "description": "Filter by status" },
+                { "key": "destination", "value": "Mumbai", "description": "Filter by destination city" },
+                { "key": "priority", "value": "Express", "description": "Filter by priority" },
+                { "key": "isDamaged", "value": "false", "description": "Filter damaged parcels" },
+                { "key": "sortBy", "value": "createdAt", "description": "Sort field" },
+                { "key": "order", "value": "desc", "description": "Sort order: asc/desc" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Parcels retrieved.\",\n  \"data\": {\n    \"parcels\": [\n      {\n        \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n        \"trackingId\": \"LMS-HYD-20260417-8X4P-M7K2\",\n        \"status\": \"Picked\",\n        \"priority\": \"Express\",\n        \"destinationAddress\": { \"city\": \"Mumbai\" },\n        \"isDamaged\": false,\n        \"createdAt\": \"2026-04-17T10:00:00.000Z\"\n      }\n    ]\n  },\n  \"meta\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 10,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Sorted View",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/parcels/sort-view",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","parcels","sort-view"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Sorted view retrieved.\",\n  \"data\": {\n    \"grouped\": {\n      \"Mumbai\": [\n        {\n          \"trackingId\": \"LMS-HYD-20260417-8X4P-M7K2\",\n          \"destinationAddress\": { \"city\": \"Mumbai\" },\n          \"priority\": \"Urgent\",\n          \"status\": \"Picked\",\n          \"createdAt\": \"2026-04-17T09:30:00.000Z\"\n        },\n        {\n          \"trackingId\": \"LMS-HYD-20260417-9Y5Q-N8L3\",\n          \"destinationAddress\": { \"city\": \"Mumbai\" },\n          \"priority\": \"Express\",\n          \"status\": \"Picked\",\n          \"createdAt\": \"2026-04-17T10:15:00.000Z\"\n        }\n      ],\n      \"Delhi\": [\n        {\n          \"trackingId\": \"LMS-HYD-20260417-7A3B-P6K1\",\n          \"destinationAddress\": { \"city\": \"Delhi\" },\n          \"priority\": \"Standard\",\n          \"status\": \"Picked\",\n          \"createdAt\": \"2026-04-17T11:00:00.000Z\"\n        }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Parcel by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/parcels/{{parcelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","parcels","{{parcelId}}"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Parcel retrieved.\",\n  \"data\": {\n    \"parcel\": {\n      \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"trackingId\": \"LMS-HYD-20260417-8X4P-M7K2\",\n      \"senderName\": \"Amit Sharma\",\n      \"senderPhone\": \"9876543210\",\n      \"recipientName\": \"Priya Patel\",\n      \"recipientPhone\": \"9123456789\",\n      \"pickupAddress\": {\n        \"street\": \"12 Nehru Street\",\n        \"city\": \"Hyderabad\",\n        \"state\": \"Telangana\",\n        \"pincode\": \"500001\"\n      },\n      \"destinationAddress\": {\n        \"street\": \"45 MG Road\",\n        \"city\": \"Mumbai\",\n        \"state\": \"Maharashtra\",\n        \"pincode\": \"400001\"\n      },\n      \"description\": \"Electronics - Laptop\",\n      \"weight\": 2.5,\n      \"dimensions\": { \"length\": 40, \"width\": 30, \"height\": 10 },\n      \"priority\": \"Express\",\n      \"status\": \"Received at Center\",\n      \"isDamaged\": false,\n      \"statusHistory\": [\n        { \"status\": \"Picked\", \"note\": \"Parcel picked up from sender\", \"timestamp\": \"2026-04-17T10:00:00.000Z\" },\n        { \"status\": \"Received at Center\", \"note\": \"Status changed to Received at Center\", \"timestamp\": \"2026-04-17T14:30:00.000Z\" }\n      ],\n      \"createdAt\": \"2026-04-17T10:00:00.000Z\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Status - Picked → Received at Center",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/parcels/{{parcelId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","parcels","{{parcelId}}","status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Received at Center\",\n  \"note\": \"Parcel received at Hyderabad center, verified and logged.\",\n  \"updatedBy\": \"center_staff_001\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Parcel status updated to 'Received at Center'.\",\n  \"data\": {\n    \"parcel\": {\n      \"status\": \"Received at Center\",\n      \"statusHistory\": [\n        { \"status\": \"Picked\", \"note\": \"Parcel picked up from sender\", \"timestamp\": \"2026-04-17T10:00:00.000Z\" },\n        { \"status\": \"Received at Center\", \"note\": \"Parcel received at Hyderabad center, verified and logged.\", \"timestamp\": \"2026-04-17T14:30:00.000Z\" }\n      ]\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Status - Invalid Transition",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/parcels/{{parcelId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","parcels","{{parcelId}}","status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Dispatched\",\n  \"note\": \"Trying to skip sorting step.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "400 Bad Request",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Cannot transition from 'Received at Center' to 'Dispatched'. Allowed: [Sorted]\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Mark as Damaged",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/parcels/{{parcelId}}/damage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","parcels","{{parcelId}}","damage"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isDamaged\": true,\n  \"damageDescription\": \"Box corner damaged during handling, contents intact.\",\n  \"updatedBy\": \"warehouse_supervisor_002\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Parcel marked as damaged.\",\n  \"data\": {\n    \"parcel\": {\n      \"isDamaged\": true,\n      \"damageDescription\": \"Box corner damaged during handling, contents intact.\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Constants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/parcels/constants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","parcels","constants"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Constants retrieved.\",\n  \"data\": {\n    \"statuses\": {\n      \"PICKED\": \"Picked\",\n      \"RECEIVED_AT_CENTER\": \"Received at Center\",\n      \"SORTED\": \"Sorted\",\n      \"DISPATCHED\": \"Dispatched\"\n    },\n    \"priorities\": {\n      \"URGENT\": \"Urgent\",\n      \"EXPRESS\": \"Express\",\n      \"STANDARD\": \"Standard\"\n    },\n    \"transitions\": {\n      \"Picked\": [\"Received at Center\"],\n      \"Received at Center\": [\"Sorted\"],\n      \"Sorted\": [\"Dispatched\"],\n      \"Dispatched\": []\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      },
+      "response": [
+        {
+          "name": "200 OK",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Parcel Center API is running.\"\n}"
+        }
+      ]
+    }
+  ]
+}
